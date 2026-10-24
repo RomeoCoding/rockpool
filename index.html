@@ -1,0 +1,530 @@
+<!doctype html>
+<html lang="en">
+<head>
+<meta charset="utf-8">
+<meta name="viewport" content="width=device-width, initial-scale=1">
+<title>rockpool</title>
+<link rel="preconnect" href="https://fonts.googleapis.com">
+<link rel="preconnect" href="https://fonts.gstatic.com" crossorigin>
+<link href="https://fonts.googleapis.com/css2?family=Chivo+Mono:wght@400;500&family=Schibsted+Grotesk:wght@400;500;700&family=Silkscreen&family=Young+Serif&display=swap" rel="stylesheet">
+<style>
+:root{
+  --paper:#F3EEE3; --shade:#E7E0D1; --card:#FAF7F0; --ink:#1F1D1A; --ink-2:#5C574E; --ink-3:#8C8579; --rule:rgba(31,29,26,.18);
+  --orange:#FF6C2F; --teal:#00838A; --pink:#FF48B0; --yellow:#FFE800; --blue:#3D5588; --pink-ink:#C2187A;
+  --serif:"Young Serif",Georgia,serif; --ui:"Schibsted Grotesk",system-ui,sans-serif; --mono:"Chivo Mono",ui-monospace,Consolas,monospace; --px:"Silkscreen",var(--mono);
+}
+@media (prefers-color-scheme:dark){:root{
+  --paper:#1F1D1A; --shade:#171513; --card:#292622; --ink:#F3EEE3; --ink-2:#BDB5A6; --ink-3:#8C8579; --rule:rgba(243,238,227,.16);
+  --teal:#2BB3B9; --blue:#8DA3D9; --pink-ink:#FF6EC2;
+}}
+*{box-sizing:border-box}
+html{color-scheme:light dark;scrollbar-color:var(--ink-3) transparent}
+body{margin:0;background:var(--paper);color:var(--ink);font:15px/1.45 var(--ui)}
+::selection{background:var(--yellow);color:#1F1D1A}
+:focus-visible{outline:2px solid var(--ink);outline-offset:3px}
+button{font:inherit;color:inherit;cursor:pointer}
+code{font:12.5px/1.3 var(--mono)}
+.num{font-variant-numeric:tabular-nums}
+.label{font:400 11px/1 var(--px);letter-spacing:.08em;text-transform:uppercase;color:var(--ink-2)}
+
+.app{display:grid;grid-template-columns:288px minmax(0,1fr);min-height:100vh}
+
+/* ---------- rail ---------- */
+.rail{position:sticky;top:0;height:100vh;overflow:auto;background:var(--shade);padding:28px 22px;display:flex;flex-direction:column;gap:26px}
+.brand{display:flex;align-items:center;gap:12px}
+.brand .mark{width:48px}
+.brand h1{font:400 30px/1 var(--serif);margin:0;letter-spacing:-.02em}
+.conn{display:flex;align-items:center;gap:8px;font:12.5px var(--mono);color:var(--ink-2);margin-top:10px}
+.conn i{width:8px;height:8px;border-radius:50%;background:var(--ink-3)}
+.conn.on i{background:var(--teal)}
+.conn.off i{background:var(--pink)}
+.rail h2{margin:0 0 8px}
+.sessions{list-style:none;margin:0;padding:0;display:flex;flex-direction:column;gap:2px}
+.sessions button{width:100%;display:flex;align-items:center;gap:10px;background:none;border:0;border-radius:4px;padding:8px 10px;text-align:left}
+.sessions button:hover{background:var(--paper)}
+.sessions svg{width:26px;flex:none}
+.sessions .t{flex:1;min-width:0;font-weight:500;font-size:14.5px;white-space:nowrap;overflow:hidden;text-overflow:ellipsis}
+.sessions .c{font:500 12px var(--mono);min-width:20px;height:20px;padding:0 6px;border-radius:3px;display:grid;place-items:center;background:var(--ink);color:var(--paper)}
+.sessions .c.needs{background:var(--pink);color:#1F1D1A}
+.sessions .quiet{color:var(--ink-2)}
+
+.spot{background:var(--card);border:1.5px solid var(--ink);border-radius:4px;padding:16px;position:relative}
+.spot-empty{color:var(--ink-2);font-size:14px;display:flex;gap:12px;align-items:center}
+.spot-empty svg{width:40px;flex:none}
+.spot-head{display:flex;gap:12px;align-items:center}
+.spot-head .portrait{width:64px;height:64px;flex:none}
+.spot-head .portrait svg{width:44px}
+.spot h3{font:700 16px/1.25 var(--ui);margin:0 0 4px}
+.spot .who{font:12px var(--mono);color:var(--ink-2)}
+.spot .stat{margin-top:14px}
+.spot .stat.needs{color:var(--pink-ink)}
+.spot h4{font:500 12px/1 var(--mono);color:var(--ink-2);margin:16px 0 6px}
+.spot .task{font-size:14px;margin:0;white-space:pre-wrap;overflow-wrap:anywhere;display:-webkit-box;-webkit-line-clamp:5;-webkit-box-orient:vertical;overflow:hidden}
+.spot .task.open{-webkit-line-clamp:unset}
+.more{background:none;border:0;padding:4px 0 0;font-weight:700;font-size:13px;text-decoration:underline;text-underline-offset:3px}
+.lately{list-style:none;margin:0;padding:0;font-size:13px}
+.lately li{display:flex;gap:8px;padding:4px 0;min-width:0}
+.lately .w{flex:1;min-width:0;white-space:nowrap;overflow:hidden;text-overflow:ellipsis}
+.lately .w b{font-weight:400;font-family:var(--mono);font-size:12px}
+.lately time{color:var(--ink-2);font:12px var(--mono)}
+.close{display:none}
+
+.rail-foot{margin-top:auto;display:flex;flex-direction:column;gap:12px;font-size:13px;color:var(--ink-2)}
+.toggle{display:flex;align-items:center;gap:8px;cursor:pointer}
+.toggle input{accent-color:var(--ink);width:15px;height:15px}
+.ghost{background:none;border:1.5px solid var(--ink);border-radius:3px;padding:6px 12px;font-weight:700;font-size:13px;color:var(--ink);align-self:flex-start}
+.ghost:hover{background:var(--ink);color:var(--paper)}
+
+/* ---------- board ---------- */
+.board{padding:32px 40px 96px;min-width:0}
+.filters{display:flex;gap:8px;flex-wrap:wrap;margin-bottom:30px}
+.filters button{display:flex;gap:8px;align-items:center;border:1.5px solid var(--ink);background:none;border-radius:3px;padding:6px 13px;font-weight:700;font-size:14px}
+.filters button:hover{background:var(--card)}
+.filters button[aria-pressed=true]{background:var(--ink);color:var(--paper)}
+.filters .n{font:400 13px var(--mono);opacity:.75}
+
+.sess{margin-bottom:52px}
+.sess-h{display:flex;align-items:baseline;gap:16px;flex-wrap:wrap;margin-bottom:18px}
+.sess-h h2{font:400 40px/1.08 var(--serif);margin:0;letter-spacing:-.02em;text-wrap:balance}
+.sess-m{margin:0;color:var(--ink-2);font:13px var(--mono)}
+.sess-m .needs{color:var(--pink-ink)}
+.roster{display:grid;grid-template-columns:repeat(auto-fill,minmax(210px,1fr));gap:16px}
+
+.pal{position:relative;display:flex;flex-direction:column;background:var(--card);border:1.5px solid var(--ink);border-radius:4px;padding:10px;cursor:pointer;transition:transform .2s cubic-bezier(.16,1,.3,1)}
+.pal:hover{transform:translateY(-2px)}
+.pal.sel{box-shadow:0 0 0 3px var(--yellow)}
+.pal.needs{border:3px solid var(--pink);padding:8.5px}
+/* the well is the pal's own ink at ~15%, like a light Riso tint behind a solid print */
+.portrait{position:relative;height:140px;border-radius:3px;display:grid;place-items:center;background:color-mix(in srgb,var(--body) 15%,var(--card))}
+.portrait svg{width:96px;height:auto;shape-rendering:crispEdges;overflow:visible}
+.meta{display:flex;align-items:center;justify-content:space-between;margin:12px 2px 0}
+.flag{font:400 12px var(--px);color:var(--ink-2)}
+.chip{font:400 10px/1 var(--px);letter-spacing:.08em;text-transform:uppercase;padding:4px 6px;border:1.5px solid currentColor;border-radius:2px;color:var(--ink-3)}
+.working .chip{color:var(--teal)}
+.needs .chip{background:var(--pink);border-color:var(--pink);color:#1F1D1A}
+.plate{margin:10px 2px 0;font:700 17px/1.25 var(--ui);display:-webkit-box;-webkit-line-clamp:2;-webkit-box-orient:vertical;overflow:hidden;overflow-wrap:anywhere}
+.tag{margin:4px 2px 0;font:12px var(--mono);color:var(--ink-2);white-space:nowrap;overflow:hidden;text-overflow:ellipsis}
+.note{margin:auto 2px 0;padding-top:9px;border-top:1px solid var(--rule);font-size:13px;color:var(--ink-2);white-space:nowrap;overflow:hidden;text-overflow:ellipsis}
+.tag + .note{margin-top:12px}
+.note b{color:var(--ink);font-weight:500}
+.note code{color:var(--ink);font-size:12px}
+.needs .note{color:var(--pink-ink);font-weight:500}
+
+.bubble{position:absolute;top:22px;left:calc(50% + 40px);display:none;padding:3px 6px;background:var(--pink);color:#1F1D1A;font:400 14px/1 var(--px);border-radius:2px}
+.needs .bubble{display:block;animation:pop 1.6s cubic-bezier(.2,.9,.3,1.4) infinite}
+.zz{position:absolute;top:22px;left:calc(50% + 40px);display:none;font:400 13px var(--px);color:var(--ink-2)}
+.idle .zz{display:block;animation:zz 3s ease-in-out infinite}
+
+.creature .lb{visibility:hidden}
+.working .creature{animation:bob .5s steps(2) infinite}
+.working .creature .la{animation:fa .5s steps(1) infinite}
+.working .creature .lb{animation:fb .5s steps(1) infinite}
+@keyframes fa{0%{visibility:visible}50%{visibility:hidden}}
+@keyframes fb{0%{visibility:hidden}50%{visibility:visible}}
+@keyframes bob{0%{transform:translateY(0)}100%{transform:translateY(-3px)}}
+@keyframes pop{0%,100%{transform:translateY(0)}12%{transform:translateY(-5px)}24%{transform:translateY(0)}}
+@keyframes zz{0%{transform:translate(0,4px);opacity:0}30%{opacity:1}100%{transform:translate(6px,-10px);opacity:0}}
+.hop{animation:hop .7s cubic-bezier(.2,.9,.3,1.25) both}
+@keyframes hop{0%{transform:translateY(18px) scale(.9)}60%{transform:translateY(-6px) scale(1.02)}100%{transform:none}}
+
+/* finished pals retire to a shelf of small grey chips */
+.shelf{margin-top:20px}
+.shelf h3{margin:0 0 10px}
+.shelf-row{display:flex;flex-wrap:wrap;gap:8px}
+.pal.done{flex-direction:row;align-items:center;gap:8px;padding:4px 12px 4px 4px;border:1.5px solid var(--rule);background:none;max-width:300px}
+.pal.done:hover{transform:none;border-color:var(--ink-3)}
+.pal.done .portrait{width:30px;height:30px;background:none}
+.pal.done .portrait svg{width:24px}
+.pal.done .creature{filter:grayscale(1);opacity:.7}
+.pal.done .plate{margin:0;font:500 13px/1.3 var(--ui);-webkit-line-clamp:1;color:var(--ink-2)}
+.pal.done :is(.meta,.tag,.note){display:none}
+
+.empty{max-width:460px;margin:12vh auto 0}
+.empty .mark{width:120px}
+.empty h2{font:400 40px/1.1 var(--serif);margin:20px 0 10px;letter-spacing:-.02em}
+.empty p{color:var(--ink-2);margin:0 0 8px}
+.empty .hint{font:12.5px/1.5 var(--mono);color:var(--ink-2)}
+.older{background:none;border:0;padding:0;font-weight:700;text-decoration:underline;text-underline-offset:3px;color:var(--ink-2)}
+
+.toast{position:fixed;left:calc(144px + 50%);bottom:22px;display:flex;align-items:center;gap:10px;background:var(--ink);color:var(--paper);
+  border-radius:4px;padding:6px 16px 6px 6px;font-weight:500;font-size:14px;transform:translate(-50%,120px);transition:transform .5s cubic-bezier(.16,1,.3,1);max-width:min(560px,90vw)}
+.toast.show{transform:translate(-50%,0)}
+.toast .portrait{width:32px;height:32px;flex:none}
+.toast .portrait svg{width:24px}
+.toast span{white-space:nowrap;overflow:hidden;text-overflow:ellipsis}
+
+@media (max-width:860px){
+  .app{grid-template-columns:1fr}
+  .rail{position:static;height:auto;padding:16px;gap:14px}
+  .sessions{flex-direction:row;overflow-x:auto;gap:6px}
+  .sessions li{flex:none;max-width:220px}
+  .rail-foot{flex-direction:row;align-items:center;justify-content:space-between;margin:0}
+  .spot{position:fixed;z-index:5;left:10px;right:10px;bottom:10px;max-height:70vh;overflow:auto;display:none}
+  .spot.has{display:block}
+  .close{display:grid;place-items:center;position:absolute;top:10px;right:10px;width:32px;height:32px;border:1.5px solid var(--ink);border-radius:3px;background:var(--card)}
+  .board{padding:20px 16px 80px}
+  .roster{grid-template-columns:repeat(auto-fill,minmax(160px,1fr));gap:12px}
+  .sess-h h2{font-size:30px}
+  .toast{left:50%}
+}
+/* multiply on dark ink swallows the teal pool, so print it straight in dark mode */
+@media (prefers-color-scheme:dark){.mark g{mix-blend-mode:normal!important}}
+@media (prefers-reduced-motion:reduce){*,*::before,*::after{animation:none!important;transition:none!important}}
+</style>
+</head>
+<body>
+<div class="app">
+  <aside class="rail">
+    <div>
+      <div class="brand"><span id="logo"></span><h1>rockpool</h1></div>
+      <div class="conn" id="conn"><i></i><span>Connecting…</span></div>
+    </div>
+    <nav aria-label="Sessions"><h2 class="label">Sessions</h2><ul class="sessions" id="sessions"></ul></nav>
+    <section class="spot" id="spot" aria-live="polite"></section>
+    <div class="rail-foot">
+      <label class="toggle"><input type="checkbox" id="hideOld" checked> Hide sessions idle over 1h</label>
+      <button class="ghost" id="clear">Clear history</button>
+    </div>
+  </aside>
+  <main class="board">
+    <div class="filters" id="filters" role="group" aria-label="Filter agents"></div>
+    <div id="board"></div>
+  </main>
+</div>
+<div class="toast" id="toast" role="status"></div>
+<script>
+/* ===== pixel pals: one silhouette, personalised per agent, deterministic so a pal never changes face ===== */
+const BODY_COLORS = ['#FF6C2F','#00838A','#FF48B0','#3D5588','#C9A400','#765BA7','#00A95C','#A75154'];  // Riso drum inks
+const NAMES = 'Mochi Pip Biscuit Nori Dumpling Pebble Sprout Tofu Waffle Clementine Bean Juniper Pudding Maple Olive Pickle Noodle Toast Fig Kiwi Basil Truffle Sesame Marzipan Peanut Saffron Taro Yuzu Crumpet Pretzel Gnocchi Churro Bao Mango Plum Quince Radish Scone Tamago Udon Wasabi Zest Clove Hazel Acorn Button Cricket Miso'.split(' ');
+const EYES = { slit:[[0,0],[0,1]], round:[[0,0],[1,0],[0,1],[1,1]], tall:[[0,-1],[0,0],[0,1]], dot:[[0,1]], wide:[[-1,0],[0,0],[-1,1],[0,1]] };
+const SHUT = [[-1,1],[0,1],[1,1]], HAPPY = [[-1,1],[0,0],[1,1]];
+const ACC = {
+  crown:  {c:'#FFE800', p:[[5,3],[6,3],[7,3],[8,3],[9,3],[10,3],[5,2],[7,2],[8,2],[10,2],[5,1],[10,1]]},
+  party:  {c:'#FF48B0', p:[[6,3],[7,3],[8,3],[9,3],[7,2],[8,2],[7,1],[8,1]], c2:'#F3EEE3', p2:[[7,0],[8,0]]},
+  bow:    {c:'#FF48B0', p:[[9,2],[10,2],[10,3],[12,3],[12,2],[13,2]], c2:'#1F1D1A', p2:[[11,3]]},
+  sprout: {c:'#00838A', p:[[8,3],[8,2]], c2:'#00A95C', p2:[[6,1],[7,1],[7,2],[9,1],[10,1],[9,0]]},
+  antenna:{c:'#1F1D1A', p:[[10,3],[10,2],[11,1]], c2:'#FFE800', p2:[[11,0],[12,0],[12,1]]},
+  beanie: {c:'#3D5588', p:[[3,3],[4,3],[5,3],[6,3],[7,3],[8,3],[9,3],[10,3],[11,3],[12,3],[4,2],[5,2],[6,2],[7,2],[8,2],[9,2],[10,2],[11,2],[6,1],[7,1],[8,1],[9,1]], c2:'#FFE800', p2:[[7,0],[8,0]]},
+  scarf:  {c:'#00838A', p:[[3,10],[4,10],[5,10],[6,10],[7,10],[8,10],[9,10],[10,10],[11,10],[12,10],[12,11],[12,12]]},
+  none:   {p:[]},
+};
+const ACC_POOL = ['party','bow','sprout','antenna','beanie','scarf','none','none'];
+
+function rng(str){ let h = 2166136261; for (const ch of str) h = Math.imul(h ^ ch.charCodeAt(0), 16777619);
+  return () => { h = h + 0x6D2B79F5 | 0; let t = Math.imul(h ^ h >>> 15, 1 | h); t = t + Math.imul(t ^ t >>> 7, 61 | t) ^ t; return ((t ^ t >>> 14) >>> 0) / 4294967296; }; }
+const pick = (r, a) => a[Math.floor(r() * a.length)];
+function lookFor(seed, main){
+  const r = rng(seed);
+  return { body: main ? '#FF6C2F' : pick(r, BODY_COLORS), eyes: pick(r, Object.keys(EYES)), acc: main ? 'crown' : pick(r, ACC_POOL),
+           cheeks: r() < .45, name: pick(r, NAMES) };
+}
+function creature(look, mood){
+  const px = [], add = (pts, c) => { for (const [x, y] of pts) px.push(`<rect x="${x}" y="${y}" width="1.02" height="1.02" fill="${c}"/>`); };
+  const body = []; for (let y = 4; y <= 11; y++) for (let x = 3; x <= 12; x++) body.push([x, y]);
+  add(body, look.body);
+  add([[1,7],[2,7],[1,8],[2,8],[13,7],[14,7],[13,8],[14,8]], look.body);
+  const eye = mood === 'done' ? HAPPY : mood === 'idle' ? SHUT : EYES[look.eyes];
+  add(eye.map(([x, y]) => [5 + x, 6 + y]).concat(eye.map(([x, y]) => [10 - x, 6 + y])), '#1F1D1A');
+  if (look.cheeks && look.body !== '#FF48B0') add([[4,8],[11,8]], '#FF48B0');
+  const a = ACC[look.acc];
+  if (a.p.length) add(a.p, a.c);
+  if (a.p2) add(a.p2, a.c2);
+  const legs = xs => xs.flatMap(([x, lift]) => lift ? [[x, 12]] : [[x, 12], [x, 13]]);
+  const la = [], lb = [];
+  add(legs([[4],[6],[9],[11]]), look.body); la.push(px.splice(-8).join(''));
+  add(legs([[4,1],[6],[9,1],[11]]), look.body); lb.push(px.splice(-6).join(''));
+  return `<svg class="creature" viewBox="0 -1 16 16" aria-hidden="true">${px.join('')}<g class="la">${la}</g><g class="lb">${lb}</g></svg>`;
+}
+
+// The mark: a pal in its pool, teal overprinting orange in multiply like two Riso drums slightly off-register.
+function markSVG(){
+  const r = [], px = (x, y, c) => r.push(`<rect x="${x}" y="${y}" width="1.02" height="1.02" fill="${c}"/>`);
+  for (let y = 5; y <= 12; y++) for (let x = 3; x <= 12; x++) px(x, y, '#FF6C2F');
+  for (const [x, y] of [[1,8],[2,8],[1,9],[2,9],[13,8],[14,8],[13,9],[14,9]]) px(x, y, '#FF6C2F');
+  for (const [x, y] of [[5,7],[5,8],[10,7],[10,8]]) px(x, y, '#1F1D1A');
+  const w = []; for (let x = 0; x < 16; x++) { if (x % 6 < 2) w.push([x, 11]); for (let y = 12; y <= 14; y++) w.push([x, y]); }
+  return `<svg class="mark" viewBox="0 0 16.6 15.6" aria-hidden="true" style="shape-rendering:crispEdges">${r.join('')}<g style="mix-blend-mode:multiply" transform="translate(.35 .25)">${w.map(([x, y]) => `<rect x="${x}" y="${y}" width="1.02" height="1.02" fill="#00838A"/>`).join('')}</g></svg>`;
+}
+
+/* ===== state from hook events ===== */
+const S = {}, byId = {}, byTool = {}, pending = {};
+let sel = null, filter = 'all', dirty = true, showOld = false;
+const LOAD = Date.now() / 1000;
+const $ = id => document.getElementById(id);
+const esc = s => String(s ?? '').replace(/[&<>"]/g, c => ({'&':'&amp;','<':'&lt;','>':'&gt;','"':'&quot;'}[c]));
+const oneLine = s => String(s ?? '').replace(/\s+/g, ' ').trim();
+const ago = t => { const s = Math.max(0, Date.now() / 1000 - t | 0); return s < 60 ? s + 's' : s < 3600 ? (s / 60 | 0) + 'm' : s < 86400 ? (s / 3600 | 0) + 'h' : (s / 86400 | 0) + 'd'; };
+const folder = p => String(p || '').split(/[\\/]/).filter(Boolean).pop() || '';
+
+// Tool call -> short human phrase. The verb is prose, the object is code when it is code.
+function phrase(tool, input){
+  const v = typeof input === 'object' && input ? input.description : oneLine(input);
+  const file = folder(v), short = s => s.length > 48 ? s.slice(0, 47) + '…' : s;
+  switch (tool) {
+    case 'Read': return {v: 'Reading', o: file, code: 1};
+    case 'Edit': case 'MultiEdit': case 'NotebookEdit': return {v: 'Editing', o: file, code: 1};
+    case 'Write': return {v: 'Writing', o: file, code: 1};
+    case 'Bash': case 'PowerShell': return {v: 'Running', o: short(v), code: 1};
+    case 'Grep': return {v: 'Searching for', o: short(v), code: 1};
+    case 'Glob': return {v: 'Finding', o: short(v), code: 1};
+    case 'WebSearch': return {v: 'Searching the web for', o: short(v)};
+    case 'WebFetch': { let h = v; try { h = new URL(v).hostname; } catch {} return {v: 'Reading', o: h}; }
+    case 'Agent': case 'Task': return {v: 'Sending a pal to', o: short(v.charAt(0).toLowerCase() + v.slice(1))};
+    case 'Skill': return {v: 'Using skill', o: v};
+    case 'TodoWrite': case 'TaskCreate': case 'TaskUpdate': return {v: 'Updating the plan'};
+    case 'AskUserQuestion': return {v: 'Asking you a question'};
+    case 'ToolSearch': return {v: 'Looking up tools'};
+  }
+  const m = /^mcp__(.+?)__(.+)$/.exec(tool || '');
+  return m ? {v: 'Using', o: m[2].replace(/_/g, ' ') + ' · ' + m[1].replace(/^(plugin_|claude_ai_)/, '')} : {v: 'Using', o: tool};
+}
+
+function session(e){
+  const id = e.session_id || 'unknown';
+  return S[id] ||= {id, cwd: '', title: '', first: e.ts, last: e.ts, agents: {}, order: [], n: 0};
+}
+function agent(s, key, init){
+  if (!s.agents[key]) {
+    s.agents[key] = {key, sid: s.id, n: ++s.n, status: 'idle', tools: 0, act: null, start: init.start, end: null, last: init.start,
+                     task: '', result: '', recent: [], look: lookFor(s.id + key, init.main), ...init};
+    // Names are per-session identity, so never hand out a name a sibling already has.
+    const taken = new Set(s.order.map(k => s.agents[k].look.name)), a = s.agents[key];
+    for (let i = NAMES.indexOf(a.look.name); taken.has(a.look.name); i++) a.look.name = NAMES[(i + 1) % NAMES.length];
+    s.order.push(key);
+  }
+  return s.agents[key];
+}
+function doing(a, act, ts){ a.act = act; a.recent.unshift({...act, ts}); a.recent.length = Math.min(a.recent.length, 10); }
+
+function apply(e){
+  const live = e.ts > LOAD - 3, s = session(e);
+  s.last = e.ts; if (e.cwd) s.cwd = e.cwd; if (e.title) s.title = e.title;
+  const main = agent(s, 'main', {main: true, title: 'Lead agent', type: 'main', start: e.ts});
+  let a = main;
+  if (e.agent_id) a = byId[e.agent_id] || (e.hook_event_name === 'SubagentStart' ? null :
+    (byId[e.agent_id] = agent(s, 'a:' + e.agent_id, {title: e.agent_type || 'Subagent', type: e.agent_type || 'subagent', status: 'working', start: e.ts})));
+  const tool = e.tool_name;
+  switch (e.hook_event_name) {
+    case 'SessionStart': if (main.status === 'done') main.status = 'idle'; break;
+    case 'UserPromptSubmit':
+      main.status = 'working'; main.task = e.prompt || ''; main.start = e.ts; main.end = null; doing(main, {v: 'Reading your message'}, e.ts); break;
+    case 'PreToolUse':
+      a.tools++; a.status = tool === 'AskUserQuestion' ? 'needs' : 'working'; doing(a, phrase(tool, e.input), e.ts);
+      if (tool === 'Agent' || tool === 'Task') {
+        const i = e.input || {}, sub = agent(s, 't:' + e.tool_use_id, {title: i.description || 'Subagent', type: i.subagent_type || 'general-purpose',
+          task: i.prompt || '', status: 'starting', start: e.ts, parent: a.key, born: live});
+        byTool[e.tool_use_id] = sub; (pending[s.id] ||= []).push(sub);
+        if (live) toast(sub, s);
+      }
+      break;
+    case 'PostToolUse': if (a.status === 'needs') a.status = 'working'; break;
+    case 'SubagentStart': {
+      const q = pending[s.id] || [], i = q.findIndex(x => x.type === e.agent_type);
+      const sub = q.length ? q.splice(Math.max(0, i), 1)[0] : agent(s, 'a:' + e.agent_id, {title: e.agent_type || 'Subagent', type: e.agent_type || 'subagent', start: e.ts, born: live});
+      byId[e.agent_id] = sub; sub.status = 'working'; doing(sub, {v: 'Getting started'}, e.ts); a = sub; break; }
+    case 'SubagentStop':
+      if (a !== main) { a.status = 'done'; a.end = e.ts; if (e.last_assistant_message) a.result = e.last_assistant_message; doing(a, {v: 'Finished'}, e.ts); }
+      break;
+    case 'Stop':
+      main.status = 'idle'; main.end = e.ts; if (e.last_assistant_message) main.result = e.last_assistant_message; doing(main, {v: 'Waiting for your next message'}, e.ts); break;
+    case 'Notification':
+      if (e.notification_type !== 'idle_prompt') { main.status = 'needs'; doing(main, {v: oneLine(e.message) || 'Needs your attention'}, e.ts); }
+      break;
+    case 'SessionEnd':
+      for (const k of s.order) { const x = s.agents[k]; if (x.status !== 'done') { x.status = 'done'; x.end = e.ts; } }
+      doing(main, {v: 'Session ended'}, e.ts); break;
+  }
+  if (a) a.last = e.ts;
+  dirty = true;
+}
+
+/* ===== rendering: keyed DOM so pals keep their identity, animate, and re-rank in place ===== */
+const STATUS = {working: 'Working', starting: 'Starting', needs: 'Needs you', idle: 'Idle', done: 'Done'};
+const RANK = {needs: 0, working: 1, starting: 1, idle: 2, done: 3};
+const secEls = {}, palEls = {};
+const isOld = s => Date.now() / 1000 - s.last > 3600;
+const matches = a => filter === 'all' || (filter === 'working' ? a.status === 'working' || a.status === 'starting' : a.status === filter);
+const actHtml = a => a.status === 'needs' && !a.act ? 'Waiting on you' : !a.act ? '' :
+  `${esc(a.act.v)}${a.act.o ? ' ' + (a.act.code ? `<code>${esc(a.act.o)}</code>` : `<b>${esc(a.act.o)}</b>`) : ''}`;
+const titleOf = s => s.title || folder(s.cwd) || 'Untitled session';
+const mood = a => a.status === 'done' ? 'done' : a.status === 'idle' ? 'idle' : 'awake';
+
+function palEl(a){
+  const k = a.sid + '|' + a.key;
+  let el = palEls[k];
+  if (!el) {
+    el = palEls[k] = document.createElement('article');
+    el.className = 'pal'; el.tabIndex = 0; el.dataset.k = k;
+    el.style.setProperty('--body', a.look.body);
+    el.innerHTML = `<div class="portrait"><span class="bubble" aria-hidden="true">!</span><span class="zz" aria-hidden="true">z</span></div>
+      <div class="meta"><span class="flag num"></span><span class="chip"><span></span></span></div>
+      <h3 class="plate"></h3><p class="tag"></p><p class="note"></p>`;
+    if (a.born) { el.classList.add('hop'); el.addEventListener('animationend', () => el.classList.remove('hop'), {once: true}); }
+  }
+  el.classList.remove('working', 'starting', 'needs', 'idle', 'done');
+  el.classList.add(a.status === 'starting' ? 'working' : a.status);
+  el.classList.toggle('sel', sel === k);
+  const m = mood(a);
+  if (el._mood !== m) { el._mood = m; el.querySelector('.creature')?.remove(); el.querySelector('.portrait').insertAdjacentHTML('afterbegin', creature(a.look, m)); }
+  el.querySelector('.flag').textContent = '#' + String(a.n).padStart(2, '0');
+  el.querySelector('.chip span').textContent = STATUS[a.status];
+  el.querySelector('.plate').textContent = a.title;
+  el.querySelector('.plate').title = a.title;
+  el.querySelector('.tag').textContent = `${a.look.name} · ${a.main ? 'lead' : a.type}`;
+  const note = el.querySelector('.note'), act = actHtml(a), h = act + (a.last ? `${act ? ' · ' : ''}<span class="num">${ago(a.last)}</span>` : '');
+  if (note._h !== h) { note._h = h; note.innerHTML = h; note.title = note.textContent; }
+  el.setAttribute('aria-label', `${a.title}, ${a.look.name}, ${STATUS[a.status]}`);
+  return el;
+}
+
+function secEl(s){
+  let el = secEls[s.id];
+  if (!el) {
+    el = secEls[s.id] = document.createElement('section');
+    el.className = 'sess'; el.id = 'sess-' + s.id;
+    el.innerHTML = `<header class="sess-h"><h2></h2><p class="sess-m"></p></header><div class="roster"></div>
+      <div class="shelf"><h3 class="label"></h3><div class="shelf-row"></div></div>`;
+  }
+  return el;
+}
+
+// FLIP: measure, reorder, then play each pal from where it was to where it is.
+function flip(run){
+  const before = new Map(); for (const k in palEls) if (palEls[k].isConnected) before.set(k, palEls[k].getBoundingClientRect());
+  run();
+  for (const [k, r] of before) {
+    const el = palEls[k]; if (!el.isConnected) continue;
+    const n = el.getBoundingClientRect(), dx = r.left - n.left, dy = r.top - n.top;
+    if (Math.abs(dx) + Math.abs(dy) < 2 || matchMedia('(prefers-reduced-motion: reduce)').matches) continue;
+    el.animate([{transform: `translate(${dx}px,${dy}px)`}, {transform: 'none'}], {duration: 520, easing: 'cubic-bezier(.16,1,.3,1)'});
+  }
+}
+
+function renderBoard(){
+  const all = Object.values(S), now = Date.now() / 1000;
+  const visible = all.filter(s => showOld || !$('hideOld').checked || !isOld(s))
+    .sort((x, y) => (hasNeeds(y) - hasNeeds(x)) || (isBusy(y) - isBusy(x)) || y.first - x.first);
+  const hidden = all.length - visible.length, board = $('board');
+  if (!visible.length) {
+    for (const k in secEls) secEls[k].remove();
+    board.innerHTML = `<div class="empty">${markSVG()}
+      <h2>${hidden ? 'All quiet' : 'No agents yet'}</h2>
+      <p>${hidden ? `${hidden} older session${hidden > 1 ? 's are' : ' is'} hidden.` : 'Start a Claude Code session. Its lead agent and every subagent it sends out will show up here.'}</p>
+      ${hidden ? '<button class="older" data-older>Show older sessions</button>' : '<p class="hint">Nothing after your first message? Check that hook.js is registered in ~/.claude/settings.json.</p>'}</div>`;
+    return;
+  }
+  board.querySelector('.empty')?.remove();
+  flip(() => {
+    let prev = null;
+    for (const s of visible) {
+      const el = secEl(s), ag = s.order.map(k => s.agents[k]);
+      const active = ag.filter(a => a.main || a.status !== 'done').sort((x, y) => (!!y.main - !!x.main) || (RANK[x.status] - RANK[y.status]) || x.n - y.n);
+      const done = ag.filter(a => !a.main && a.status === 'done').sort((x, y) => y.end - x.end);
+      const w = ag.filter(a => a.status === 'working' || a.status === 'starting').length, nd = ag.filter(a => a.status === 'needs').length;
+      el.querySelector('h2').textContent = titleOf(s);
+      el.querySelector('.sess-m').innerHTML = [s.title && folder(s.cwd) ? esc(folder(s.cwd)) : '',
+        nd ? `<span class="needs">${nd} need${nd > 1 ? '' : 's'} you</span>` : '', w ? `${w} working` : '',
+        `<span class="num">${now - s.last < 5 ? 'active now' : 'active ' + ago(s.last) + ' ago'}</span>`].filter(Boolean).join(' · ');
+      const roster = el.querySelector('.roster'), shelfRow = el.querySelector('.shelf-row');
+      active.forEach((a, i) => { const p = palEl(a); p.hidden = !matches(a); if (roster.children[i] !== p) roster.insertBefore(p, roster.children[i] || null); });
+      done.forEach((a, i) => { const p = palEl(a); p.hidden = !matches(a); if (shelfRow.children[i] !== p) shelfRow.insertBefore(p, shelfRow.children[i] || null); });
+      for (const c of [...roster.children]) if (!active.some(a => palEls[a.sid + '|' + a.key] === c)) c.remove();
+      const shownDone = done.filter(matches).length;
+      el.querySelector('.shelf').hidden = !shownDone;
+      el.querySelector('.shelf h3').textContent = `Finished · ${done.length}`;
+      el.hidden = filter !== 'all' && !ag.some(matches);
+      if (el.previousElementSibling !== prev || el.parentNode !== board) board.insertBefore(el, prev ? prev.nextSibling : board.firstChild);
+      prev = el;
+    }
+  });
+  for (const id in secEls) if (!visible.includes(S[id])) secEls[id].remove();
+  let more = board.querySelector('.older-wrap');
+  if (hidden) { if (!more) { more = document.createElement('p'); more.className = 'older-wrap'; board.append(more); }
+    more.innerHTML = `<button class="older" data-older>${hidden} older session${hidden > 1 ? 's' : ''} hidden — show</button>`; }
+  else more?.remove();
+}
+const hasNeeds = s => s.order.some(k => s.agents[k].status === 'needs');
+const isBusy = s => s.order.some(k => ['working', 'starting'].includes(s.agents[k].status));
+
+function renderRail(){
+  const list = Object.values(S).sort((x, y) => y.last - x.last).slice(0, 12);
+  $('sessions').innerHTML = list.length ? list.map(s => {
+    const ag = s.order.map(k => s.agents[k]), nd = ag.filter(a => a.status === 'needs').length,
+          w = ag.filter(a => a.status === 'working' || a.status === 'starting').length;
+    return `<li><button data-sess="${esc(s.id)}" class="${isOld(s) ? 'quiet' : ''}">${creature(s.agents.main.look, w || nd ? 'awake' : 'idle')}
+      <span class="t" title="${esc(titleOf(s))}">${esc(titleOf(s))}</span>
+      ${nd ? `<span class="c needs" title="needs you">${nd}</span>` : w ? `<span class="c num" title="working">${w}</span>` : ''}</button></li>`;
+  }).join('') : '<li style="color:var(--ink-3);font-size:13px;padding:4px 8px">None yet</li>';
+
+  const all = Object.values(S).flatMap(s => s.order.map(k => s.agents[k]));
+  const counts = {all: all.length, working: all.filter(a => a.status === 'working' || a.status === 'starting').length,
+                  needs: all.filter(a => a.status === 'needs').length, done: all.filter(a => a.status === 'done').length};
+  $('filters').innerHTML = [['all', 'Everyone'], ['working', 'Working'], ['needs', 'Needs you'], ['done', 'Finished']].map(([k, l]) =>
+    `<button data-filter="${k}" aria-pressed="${filter === k}">${l}<span class="n num">${counts[k]}</span></button>`).join('');
+  document.title = counts.needs ? `(${counts.needs}) needs you · rockpool` : counts.working ? `${counts.working} working · rockpool` : 'rockpool';
+  renderSpot();
+}
+
+let openTask = false;
+function renderSpot(){
+  const spot = $('spot');
+  const [sid, key] = (sel || '').split('|'), a = sid && S[sid] && S[sid].agents[key];
+  spot.classList.toggle('has', !!a);
+  if (!a) { spot.innerHTML = `<div class="spot-empty">${creature(lookFor('spot', false), 'idle')}<span>Pick a pal to see what it was asked and what it has been up to.</span></div>`; return; }
+  const took = ((a.end || Date.now() / 1000) - a.start) | 0, dur = took < 60 ? took + 's' : took < 3600 ? (took / 60 | 0) + 'm ' + (took % 60) + 's' : (took / 3600 | 0) + 'h ' + ((took % 3600) / 60 | 0) + 'm';
+  const k = sid + '|' + key, h = `
+    <button class="close" data-close aria-label="Close"><svg width="14" height="14" viewBox="0 0 14 14"><path d="M2 2l10 10M12 2L2 12" stroke="currentColor" stroke-width="2" stroke-linecap="round"/></svg></button>
+    <div class="spot-head"><div class="portrait" style="--body:${a.look.body}">${creature(a.look, mood(a))}</div>
+      <div><h3>${esc(a.title)}</h3><div class="who">${esc(a.look.name)} · ${esc(a.main ? 'lead agent' : a.type)}</div></div></div>
+    <div class="stat label num ${a.status === 'needs' ? 'needs' : ''}">${STATUS[a.status]} · ${a.status === 'working' || a.status === 'starting' ? 'for ' : ''}${dur} · ${a.tools} action${a.tools === 1 ? '' : 's'}</div>
+    ${a.task ? `<h4>${a.main ? 'You asked' : 'Asked to'}</h4><p class="task ${openTask ? 'open' : ''}">${esc(a.task)}</p>
+      ${a.task.length > 220 ? `<button class="more" data-more>${openTask ? 'Show less' : 'Show all'}</button>` : ''}` : ''}
+    ${a.recent.length ? `<h4>Lately</h4><ul class="lately">${a.recent.slice(0, 8).map(r => `<li><span class="w">${esc(r.v)}${r.o ? ' <b>' + esc(r.o) + '</b>' : ''}</span><time class="num">${ago(r.ts)}</time></li>`).join('')}</ul>` : ''}
+    ${a.result ? `<h4>${a.main ? 'Last reply' : 'Reported back'}</h4><p class="task">${esc(a.result)}</p>` : ''}`;
+  if (spot._h !== h) { spot._h = h; spot.innerHTML = h; }
+}
+
+let toastTimer;
+function toast(a, s){
+  const t = $('toast');
+  t.innerHTML = `<div class="portrait" style="--body:${a.look.body}">${creature(a.look, 'awake')}</div><span>${esc(a.look.name)} joined ${esc(titleOf(s))}: ${esc(a.title)}</span>`;
+  t.classList.add('show'); clearTimeout(toastTimer); toastTimer = setTimeout(() => t.classList.remove('show'), 4200);
+}
+
+/* ===== wiring ===== */
+document.addEventListener('click', ev => {
+  const t = ev.target.closest('[data-k],[data-filter],[data-sess],[data-older],[data-more],[data-close]'); if (!t) return;
+  if (t.dataset.k) { sel = sel === t.dataset.k ? null : t.dataset.k; openTask = false; }
+  else if (t.dataset.filter) filter = t.dataset.filter;
+  else if (t.dataset.sess) { showOld = showOld || isOld(S[t.dataset.sess]); renderBoard(); $('sess-' + t.dataset.sess)?.scrollIntoView({behavior: 'smooth', block: 'start'}); }
+  else if ('older' in t.dataset) showOld = true;
+  else if ('more' in t.dataset) openTask = !openTask;
+  else if ('close' in t.dataset) sel = null;
+  dirty = true;
+});
+document.addEventListener('keydown', ev => {
+  if ((ev.key === 'Enter' || ev.key === ' ') && ev.target.matches('.pal')) { ev.preventDefault(); ev.target.click(); }
+  if (ev.key === 'Escape' && sel) { sel = null; dirty = true; }
+});
+$('hideOld').onchange = () => { showOld = false; dirty = true; };
+$('clear').onclick = () => { if (confirmClear()) fetch('/clear', {method: 'POST'}); };
+// Two-step clear instead of a blocking dialog: first click arms, second click within 3s wipes.
+let armed = 0;
+function confirmClear(){ const b = $('clear'); if (Date.now() - armed < 3000) { b.textContent = 'Clear history'; armed = 0; return true; }
+  armed = Date.now(); b.textContent = 'Click again to clear'; setTimeout(() => { if (armed && Date.now() - armed >= 3000) b.textContent = 'Clear history'; }, 3100); return false; }
+$('logo').innerHTML = markSVG();
+
+setInterval(() => dirty = true, 1000);  // keep relative times fresh
+(function loop(){ if (dirty) { dirty = false; renderBoard(); renderRail(); } requestAnimationFrame(loop); })();
+
+function wipe(){ for (const o of [S, byId, byTool, pending]) for (const k in o) delete o[k];
+  for (const o of [secEls, palEls]) for (const k in o) { o[k].remove(); delete o[k]; } sel = null; dirty = true; }
+const conn = (cls, text) => { $('conn').className = 'conn ' + cls; $('conn').querySelector('span').textContent = text; };
+const es = new EventSource('/stream');
+es.onopen = () => { wipe(); conn('on', 'Live on this machine'); };  // the server replays full history on every (re)connect
+es.onerror = () => conn('off', 'Offline: run python server.py');
+es.onmessage = m => apply(JSON.parse(m.data));
+es.addEventListener('reset', wipe);
+</script>
+</body>
+</html>
