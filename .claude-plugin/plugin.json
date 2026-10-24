@@ -1,0 +1,9 @@
+{
+  "name": "rockpool",
+  "version": "0.1.0",
+  "description": "Peer in on every Claude Code agent: who is working, on what, and who needs you. A local, zero-token dashboard at http://localhost:7777.",
+  "author": { "name": "RomeoCoding" },
+  "homepage": "https://github.com/RomeoCoding/rockpool",
+  "repository": "https://github.com/RomeoCoding/rockpool",
+  "keywords": ["subagents", "dashboard", "hooks", "observability"]
+}

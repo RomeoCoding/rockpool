@@ -1,0 +1,14 @@
+{
+  "name": "rockpool",
+  "description": "rockpool: a live local dashboard of your Claude Code agents.",
+  "owner": {
+    "name": "RomeoCoding"
+  },
+  "plugins": [
+    {
+      "name": "rockpool",
+      "source": "./",
+      "description": "Live local dashboard of every Claude Code agent and subagent. Zero tokens: fed by hooks, not the model."
+    }
+  ]
+}

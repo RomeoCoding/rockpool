@@ -10,7 +10,9 @@ from http.server import BaseHTTPRequestHandler, ThreadingHTTPServer
 
 PORT = int(os.environ.get("ROCKPOOL_PORT", "7777"))
 HERE = os.path.dirname(os.path.abspath(__file__))
-LOG = os.path.join(HERE, "events.jsonl")
+# History lives outside the code folder: plugin updates replace that folder, and it keeps prompts out of the repo.
+DATA = os.environ.get("ROCKPOOL_DATA") or os.path.join(os.path.expanduser("~"), ".rockpool")
+LOG = os.path.join(DATA, "events.jsonl")
 MAX = 5000  # events kept in memory and replayed to new browser tabs
 
 events, gen, cond = [], 0, threading.Condition()
@@ -102,6 +104,7 @@ class H(BaseHTTPRequestHandler):
 
 
 if __name__ == "__main__":
+    os.makedirs(DATA, exist_ok=True)
     load()
     srv = ThreadingHTTPServer(("127.0.0.1", PORT), H)
     srv.daemon_threads = True

@@ -32,9 +32,12 @@ const serverUp = () => new Promise(res => {
   s.on('error', () => res(false)); s.setTimeout(200, () => { s.destroy(); res(false); });
 });
 
-function startServer() {
-  const py = process.platform === 'win32' ? 'pythonw' : 'python3';  // pythonw: no console window flashing up
-  spawn(py, [path.join(__dirname, 'server.py')], { cwd: __dirname, detached: true, stdio: 'ignore', windowsHide: true }).unref();
+// Try each Python launcher until one exists; pythonw first on Windows so no console window flashes up.
+function startServer(cands = process.platform === 'win32' ? ['pythonw', 'pyw', 'python', 'py'] : ['python3', 'python']) {
+  if (!cands.length) return;
+  const child = spawn(cands[0], [path.join(__dirname, 'server.py')], { cwd: __dirname, detached: true, stdio: 'ignore', windowsHide: true });
+  child.on('error', () => startServer(cands.slice(1)));
+  child.unref();
 }
 
 function post(ev) {
